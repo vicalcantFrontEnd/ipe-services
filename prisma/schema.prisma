@@ -1,0 +1,349 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  PSYCHOLOGIST
+  TEACHER
+  SECRETARY
+  STUDENT
+  PARENT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum DocumentType {
+  DNI
+  CE        // Carné de extranjería
+  PASSPORT
+}
+
+enum Modality {
+  PRESENCIAL
+  VIRTUAL
+  HIBRIDO
+}
+
+enum DiplomadoStatus {
+  DRAFT
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  DROPPED
+  SUSPENDED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentType {
+  INITIAL_CONSULTATION
+  FOLLOW_UP
+  EVALUATION
+  THERAPY_SESSION
+  GROUP_SESSION
+  PARENT_MEETING
+}
+
+enum RecordType {
+  CLINICAL_NOTE
+  EVALUATION
+  DIAGNOSIS
+  TREATMENT_PLAN
+  PROGRESS_NOTE
+  DISCHARGE_SUMMARY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+// ============================================================
+// MODELS
+// ============================================================
+
+/// Usuarios del sistema (admin, psicólogos, docentes, secretarias)
+model User {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  firstName    String     @map("first_name")
+  lastName     String     @map("last_name")
+  phone        String?
+  role         UserRole   @default(ADMIN)
+  status       UserStatus @default(ACTIVE)
+  avatarUrl    String?    @map("avatar_url")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Profiles
+  psychologistProfile PsychologistProfile?
+  teacherProfile      TeacherProfile?
+
+  // Relations
+  appointmentsAsPsychologist Appointment[]    @relation("PsychologistAppointments")
+  clinicalRecordsAuthored    ClinicalRecord[] @relation("AuthoredRecords")
+  diplomadosAsTeacher        Diplomado[]      @relation("DiplomadoTeacher")
+
+  @@index([email, deletedAt])
+  @@index([role, status])
+  @@map("users")
+}
+
+/// Alumnos — entidad separada de User, gestionados desde el panel admin
+model Student {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firstName      String       @map("first_name")
+  lastName       String       @map("last_name")
+  email          String       @unique
+  phone          String?
+  documentType   DocumentType @default(DNI) @map("document_type")
+  documentNumber String       @unique @map("document_number")
+  dateOfBirth    DateTime?    @map("date_of_birth") @db.Date
+  gender         Gender?
+  address        String?
+  city           String?
+  status         UserStatus   @default(ACTIVE)
+  avatarUrl      String?      @map("avatar_url")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  // Relations
+  enrollments     Enrollment[]
+  patientProfile  PatientProfile?
+  invoices        Invoice[]
+
+  @@index([email, deletedAt])
+  @@index([documentNumber])
+  @@index([status])
+  @@map("students")
+}
+
+model PsychologistProfile {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String  @unique @map("user_id") @db.Uuid
+  licenseNumber   String  @unique @map("license_number")
+  specialization  String?
+  bio             String?
+  yearsExperience Int?    @map("years_experience")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("psychologist_profiles")
+}
+
+model TeacherProfile {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String  @unique @map("user_id") @db.Uuid
+  department String?
+  title      String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_profiles")
+}
+
+// ============================================================
+// DIPLOMADOS (Programas educativos / Diploma courses)
+// ============================================================
+
+/// Diplomados — programas educativos gestionados desde el panel admin
+model Diplomado {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  slug        String          @unique
+  description String?
+  teacherId   String?         @map("teacher_id") @db.Uuid
+  status      DiplomadoStatus @default(DRAFT)
+  modality    Modality        @default(VIRTUAL)
+  startDate   DateTime?       @map("start_date") @db.Date
+  endDate     DateTime?       @map("end_date") @db.Date
+  durationHours Int?          @map("duration_hours")
+  capacity    Int?
+  price       Decimal?        @db.Decimal(10, 2)
+  currency    String          @default("PEN") @db.VarChar(3)
+  imageUrl    String?         @map("image_url")
+  metadata    Json?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  teacher     User?        @relation("DiplomadoTeacher", fields: [teacherId], references: [id])
+  enrollments Enrollment[]
+
+  @@index([status])
+  @@index([teacherId])
+  @@index([slug])
+  @@map("diplomados")
+}
+
+model Enrollment {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  diplomadoId String           @map("diplomado_id") @db.Uuid
+  studentId   String           @map("student_id") @db.Uuid
+  status      EnrollmentStatus @default(PENDING)
+  enrolledAt  DateTime         @default(now()) @map("enrolled_at")
+  completedAt DateTime?        @map("completed_at")
+  grade       Decimal?         @db.Decimal(5, 2)
+  notes       String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  diplomado Diplomado @relation(fields: [diplomadoId], references: [id])
+  student   Student   @relation(fields: [studentId], references: [id])
+
+  @@unique([diplomadoId, studentId])
+  @@index([studentId, status])
+  @@map("enrollments")
+}
+
+// ============================================================
+// CLÍNICA (para fase posterior)
+// ============================================================
+
+model PatientProfile {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId      String   @unique @map("student_id") @db.Uuid
+  gender         Gender
+  address        String?
+  emergencyName  String?  @map("emergency_name")
+  emergencyPhone String?  @map("emergency_phone")
+  medicalHistory Json?    @map("medical_history")
+  referralSource String?  @map("referral_source")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  student         Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  appointments    Appointment[]
+  clinicalRecords ClinicalRecord[]
+
+  @@map("patient_profiles")
+}
+
+model Appointment {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId          String            @map("patient_id") @db.Uuid
+  psychologistId     String            @map("psychologist_id") @db.Uuid
+  type               AppointmentType
+  status             AppointmentStatus @default(SCHEDULED)
+  scheduledAt        DateTime          @map("scheduled_at")
+  duration           Int               @default(60)
+  notes              String?
+  cancellationReason String?           @map("cancellation_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  patient      PatientProfile @relation(fields: [patientId], references: [id])
+  psychologist User           @relation("PsychologistAppointments", fields: [psychologistId], references: [id])
+
+  @@index([patientId, scheduledAt])
+  @@index([psychologistId, scheduledAt])
+  @@index([status, scheduledAt])
+  @@map("appointments")
+}
+
+model ClinicalRecord {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  patientId      String     @map("patient_id") @db.Uuid
+  authorId       String     @map("author_id") @db.Uuid
+  type           RecordType
+  title          String
+  content        Json
+  isConfidential Boolean    @default(false) @map("is_confidential")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  patient PatientProfile @relation(fields: [patientId], references: [id])
+  author  User           @relation("AuthoredRecords", fields: [authorId], references: [id])
+
+  @@index([patientId, type])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("clinical_records")
+}
+
+model Invoice {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId   String        @map("student_id") @db.Uuid
+  amount      Decimal       @db.Decimal(10, 2)
+  currency    String        @default("PEN") @db.VarChar(3)
+  status      PaymentStatus @default(PENDING)
+  method      PaymentMethod?
+  description String?
+  dueDate     DateTime      @map("due_date") @db.Date
+  paidAt      DateTime?     @map("paid_at")
+  metadata    Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@index([studentId, status])
+  @@index([dueDate, status])
+  @@map("invoices")
+}
