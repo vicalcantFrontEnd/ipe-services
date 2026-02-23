@@ -68,7 +68,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     // Global interceptors
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
-    { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
+    { provide: APP_INTERCEPTOR, useValue: new TimeoutInterceptor() },
   ],
 })
 export class AppModule implements NestModule {
