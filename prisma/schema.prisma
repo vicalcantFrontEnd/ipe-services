@@ -120,7 +120,9 @@ model User {
   phone        String?
   role         UserRole   @default(ADMIN)
   status       UserStatus @default(ACTIVE)
-  avatarUrl    String?    @map("avatar_url")
+  avatarUrl       String?    @map("avatar_url")
+  emailVerified   Boolean    @default(false) @map("email_verified")
+  emailVerifiedAt DateTime?  @map("email_verified_at")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -134,10 +136,44 @@ model User {
   appointmentsAsPsychologist Appointment[]    @relation("PsychologistAppointments")
   clinicalRecordsAuthored    ClinicalRecord[] @relation("AuthoredRecords")
   diplomadosAsTeacher        Diplomado[]      @relation("DiplomadoTeacher")
+  passwordResets             PasswordReset[]
+  emailVerifications         EmailVerification[]
 
   @@index([email, deletedAt])
   @@index([role, status])
   @@map("users")
+}
+
+/// Tokens de restablecimiento de contraseña
+model PasswordReset {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@map("password_resets")
+}
+
+/// Tokens de verificación de email
+model EmailVerification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tokenHash])
+  @@index([userId])
+  @@map("email_verifications")
 }
 
 /// Alumnos — entidad separada de User, gestionados desde el panel admin

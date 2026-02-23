@@ -6,6 +6,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 // Infrastructure
 import { ConfigModule } from './config';
 import { PrismaModule } from './database/prisma/prisma.module';
+import { RedisModule } from './database/redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from './health/health.module';
 
@@ -34,6 +35,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     // Infrastructure
     ConfigModule,
     PrismaModule,
+    RedisModule,
     EventEmitterModule.forRoot({ wildcard: true, maxListeners: 20 }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
 

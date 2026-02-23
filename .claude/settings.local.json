@@ -19,7 +19,13 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(npx prisma migrate dev:*)",
-      "Bash(npx ts-node:*)"
+      "Bash(npx ts-node:*)",
+      "Bash(node:*)",
+      "Bash(dir:*)",
+      "Bash(npx prisma migrate status)",
+      "Bash(npx prisma migrate diff:*)",
+      "Bash(echo:*)",
+      "Bash(npx prisma migrate:*)"
     ]
   }
 }
