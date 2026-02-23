@@ -48,7 +48,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /opt/ipe-services
-            # Iniciar sesión para poder descargar la imagen privada
+            docker network create ipe_network 2>/dev/null || true
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             docker compose -f docker-compose.prod.yml up -d --force-recreate api
             docker image prune -f

@@ -1,12 +1,13 @@
 services:
   api:
+    container_name: ipe_api_prod
     image: ghcr.io/vicalcantfrontend/ipe-services:latest
     ports:
       - '3000:3000'
     env_file:
       - .env
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'
+    networks:
+      - ipe_network
     depends_on:
       redis:
         condition: service_started
@@ -22,7 +23,13 @@ services:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
+    networks:
+      - ipe_network
     restart: unless-stopped
 
 volumes:
   redis_data:
+
+networks:
+  ipe_network:
+    external: true

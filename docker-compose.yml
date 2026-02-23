@@ -15,6 +15,7 @@ services:
     restart: unless-stopped
 
   postgres:
+    container_name: postgres_db
     image: postgres:16-alpine
     ports:
       - '5432:5432'
@@ -24,6 +25,8 @@ services:
       POSTGRES_DB: ipe_services
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ipe_network
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ipe_user -d ipe_services']
       interval: 10s
@@ -42,3 +45,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  ipe_network:
+    external: true
