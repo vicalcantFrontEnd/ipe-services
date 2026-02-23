@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(npx @nestjs/cli@latest new:*)",
+      "Bash(powershell -Command \"Copy-Item -Path ''ipe-services\\\\*'' -Destination ''.'' -Recurse -Force; Remove-Item -Path ''ipe-services'' -Recurse -Force\")",
+      "Bash(del /Q srcapp.controller.ts srcapp.service.ts srcapp.controller.spec.ts nul)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git init:*)",
+      "Bash(npx prisma validate:*)",
+      "Bash(DATABASE_URL=\"postgresql://fake:fake@localhost:5432/fake\" DIRECT_URL=\"postgresql://fake:fake@localhost:5432/fake\" npx prisma validate:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx nest build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}
