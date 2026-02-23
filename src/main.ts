@@ -39,8 +39,8 @@ async function bootstrap(): Promise<void> {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
 
-  // Swagger (non-production)
-  if (config.get<string>('app.NODE_ENV') !== 'production') {
+  // Swagger
+  {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('IPE Services API')
       .setDescription('API del Instituto de Psicología y Educación')
