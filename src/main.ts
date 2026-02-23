@@ -31,12 +31,14 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  // Security
-  await app.register(helmet as never);
+  // Security — CORS must be registered before Helmet
   app.enableCors({
-    origin: corsOrigins.split(','),
+    origin: corsOrigins.split(',').map((o) => o.trim()),
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
+  await app.register(helmet as never, {
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
   // Swagger
