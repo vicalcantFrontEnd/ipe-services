@@ -80,15 +80,35 @@ export class AuthService {
     return { user: this.stripHash(user), tokens };
   }
 
-  async logout(accessToken: string): Promise<void> {
-    const decoded = this.jwt.decode(accessToken) as { exp?: number } | null;
-    if (!decoded?.exp) return;
+  async logout(refreshToken: string, accessToken?: string): Promise<void> {
+    // Validate refresh token to ensure caller owns the session
+    try {
+      this.jwt.verify(refreshToken, {
+        secret: this.config.getOrThrow<string>('auth.JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Refresh token inválido o expirado');
+    }
 
-    const now = Math.floor(Date.now() / 1000);
-    const ttl = decoded.exp - now;
-    if (ttl <= 0) return;
+    // Blacklist the refresh token
+    const refreshDecoded = this.jwt.decode(refreshToken) as { exp?: number } | null;
+    if (refreshDecoded?.exp) {
+      const refreshTtl = refreshDecoded.exp - Math.floor(Date.now() / 1000);
+      if (refreshTtl > 0) {
+        await this.tokenBlacklist.blacklistToken(refreshToken, refreshTtl);
+      }
+    }
 
-    await this.tokenBlacklist.blacklistToken(accessToken, ttl);
+    // Blacklist access token if provided (may be expired, that's ok)
+    if (accessToken) {
+      const accessDecoded = this.jwt.decode(accessToken) as { exp?: number } | null;
+      if (accessDecoded?.exp) {
+        const accessTtl = accessDecoded.exp - Math.floor(Date.now() / 1000);
+        if (accessTtl > 0) {
+          await this.tokenBlacklist.blacklistToken(accessToken, accessTtl);
+        }
+      }
+    }
   }
 
   async refresh(refreshToken: string): Promise<TokenPair> {

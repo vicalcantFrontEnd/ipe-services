@@ -56,18 +56,20 @@ export class AuthController {
     return this.authService.getProfile(user.id);
   }
 
+  @Public()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Cerrar sesión', description: 'Invalida el token de acceso actual' })
+  @ApiOperation({ summary: 'Cerrar sesión', description: 'Invalida los tokens de la sesión actual. Requiere refreshToken en body. Si se envía access token en Authorization header, también se invalida.' })
   @ApiNoContentResponse({ description: 'Sesión cerrada exitosamente' })
-  @ApiUnauthorizedResponse({ description: 'Token inválido o expirado' })
+  @ApiUnauthorizedResponse({ description: 'Refresh token inválido o expirado' })
   async logout(
-    @CurrentUser() _user: UserPayload,
-    @Headers('authorization') authHeader: string,
+    @Body() dto: RefreshTokenDto,
+    @Headers('authorization') authHeader?: string,
   ): Promise<void> {
-    const token = authHeader.replace('Bearer ', '');
-    await this.authService.logout(token);
+    const accessToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : undefined;
+    await this.authService.logout(dto.refreshToken, accessToken);
   }
 
   @Patch('change-password')
