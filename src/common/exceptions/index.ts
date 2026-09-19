@@ -6,3 +6,4 @@ export {
   ErrorCodes,
   type ErrorCode,
 } from './business.exception';
+export { PlainErrorException } from './plain-error.exception';

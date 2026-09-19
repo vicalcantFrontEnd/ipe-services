@@ -25,7 +25,11 @@
       "Bash(npx prisma migrate status)",
       "Bash(npx prisma migrate diff:*)",
       "Bash(echo:*)",
-      "Bash(npx prisma migrate:*)"
+      "Bash(npx prisma migrate:*)",
+      "Skill(claude-api)",
+      "PowerShell(npm install *)",
+      "PowerShell(npm run *)",
+      "PowerShell(npx eslint \"src/common/interceptors/timeout.interceptor.ts\" 2>&1 | Select-Object -Last 10; Write-Output \"LINT EXIT: $LASTEXITCODE\")"
     ]
   }
 }

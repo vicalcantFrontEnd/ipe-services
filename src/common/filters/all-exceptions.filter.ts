@@ -1,6 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { BusinessException } from '../exceptions';
+import { BusinessException, PlainErrorException } from '../exceptions';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -11,6 +11,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<FastifyReply>();
     const request = ctx.getRequest<FastifyRequest>();
     const correlationId = request.headers['x-correlation-id'] as string;
+
+    // Errores de contrato plano (p. ej. Generador de Diplomados): cuerpo `{ error }`
+    // tal cual, sin el envelope estándar de la casa.
+    if (exception instanceof PlainErrorException) {
+      const status = exception.getStatus();
+      const { error } = exception.getResponse() as { error: string };
+      this.logger.warn(`[${correlationId}] ${request.method} ${request.url} ${status} - ${error}`);
+      void response.status(status).send({ error });
+      return;
+    }
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let errorCode = 'S_INTERNAL_ERROR';

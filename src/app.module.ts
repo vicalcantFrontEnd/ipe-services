@@ -21,6 +21,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { UsersModule } from './modules/users/users.module';
 import { StudentsModule } from './modules/students/students.module';
 import { DiplomadosModule } from './modules/diplomados/diplomados.module';
+import { GeneradorModule } from './modules/generador/generador.module';
 
 // Domain modules — Stubs (for future phases)
 import { PatientsModule } from './modules/patients/patients.module';
@@ -50,6 +51,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     StudentsModule,
     DiplomadosModule,
 
+    // Generador de Diplomados (LLM — Anthropic)
+    GeneradorModule,
+
     // Future phases
     PatientsModule,
     AppointmentsModule,
@@ -70,7 +74,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     // Global interceptors
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
-    { provide: APP_INTERCEPTOR, useValue: new TimeoutInterceptor() },
+    { provide: APP_INTERCEPTOR, useClass: TimeoutInterceptor },
   ],
 })
 export class AppModule implements NestModule {
