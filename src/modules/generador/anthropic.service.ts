@@ -31,7 +31,12 @@ export class AnthropicService implements OnModuleInit {
       );
       return;
     }
-    this.client = new Anthropic({ apiKey });
+    const workspaceId = this.config.get<string>('anthropic.ANTHROPIC_WORKSPACE_ID');
+    this.client = new Anthropic({
+      apiKey,
+      // Necesario cuando la key es de organización (no scoped a un workspace).
+      ...(workspaceId ? { defaultHeaders: { 'anthropic-workspace-id': workspaceId } } : {}),
+    });
   }
 
   /**
