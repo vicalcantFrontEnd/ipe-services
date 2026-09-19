@@ -98,3 +98,78 @@ export const AmpliacionSchema = z.object({
   citas: z.array(CitaSchema).optional(),
 });
 export type Ampliacion = z.infer<typeof AmpliacionSchema>;
+
+// ── Metadatos de módulo (entrada para agentes académico y UX) ────────────────
+const ModuloBaseSchema = z.object({
+  n: z.number().optional(),
+  titulo: z.string(),
+  tituloAcademico: z.string().optional(),
+  marco: z.string().optional(),
+  horas: z.number().optional(),
+});
+
+const LeccionResumenSchema = z.object({
+  id: z.string().optional(),
+  titulo: z.string(),
+  sintesis: z.string().optional(),
+  conceptos: z.array(ConceptoSchema).optional(),
+  procedimiento: z.array(z.string()).optional(),
+});
+
+// ── Agente 2: POST /modulo-academico ─────────────────────────────────────────
+export const ModuloAcademicoRequestSchema = z.object({
+  tipo: z.literal('modulo-academico').optional(),
+  investigar: z.boolean().optional().default(false),
+  modulo: ModuloBaseSchema,
+  lecciones: z.array(LeccionResumenSchema).optional(),
+});
+export type ModuloAcademicoRequest = z.infer<typeof ModuloAcademicoRequestSchema>;
+
+export const ModuloAcademicoSchema = z.object({
+  tituloAcademico: z.string(),
+  objetivos: z.object({
+    general: z.string(),
+    especificos: z.array(z.string()).min(1),
+  }),
+  actividad: z.object({
+    nombre: z.string(),
+    instrucciones: z.array(z.string()).min(1),
+    entregable: z.string(),
+  }),
+  reactivos: z
+    .array(
+      z.object({
+        q: z.string(),
+        ops: z.array(z.string()).min(2),
+        ok: z.number().int().min(0), // índice 0-based de la opción correcta
+        just: z.string(),
+      }),
+    )
+    .min(1),
+});
+export type ModuloAcademico = z.infer<typeof ModuloAcademicoSchema>;
+
+// ── Agente 3: POST /spec-ux ──────────────────────────────────────────────────
+export const SpecUxRequestSchema = z.object({
+  tipo: z.literal('spec-ux').optional(),
+  investigar: z.boolean().optional().default(false),
+  modulo: ModuloBaseSchema,
+  encuadre: z.string().optional(),
+});
+export type SpecUxRequest = z.infer<typeof SpecUxRequestSchema>;
+
+export const SpecUxSchema = z.object({
+  paleta: z
+    .array(
+      z.object({
+        hex: z.string(),
+        nombre: z.string(),
+        rol: z.string(),
+        just: z.string(),
+      }),
+    )
+    .min(1),
+  fuentes: z.object({ display: z.string(), body: z.string() }),
+  prompts: z.array(z.string()).min(1),
+});
+export type SpecUx = z.infer<typeof SpecUxSchema>;

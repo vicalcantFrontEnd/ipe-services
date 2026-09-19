@@ -12,7 +12,8 @@ const anthropicConfigSchema = z.object({
   // Máximo de tokens de salida por generación (una lección larga cabe holgada en 8000).
   ANTHROPIC_MAX_TOKENS: z.coerce.number().int().positive().default(8000),
   // Nº máximo de búsquedas web por generación cuando `investigar` está activo.
-  ANTHROPIC_WEB_SEARCH_MAX_USES: z.coerce.number().int().positive().default(5),
+  // 3 = suficiente para evidencia específica sin disparar el costo.
+  ANTHROPIC_WEB_SEARCH_MAX_USES: z.coerce.number().int().positive().default(3),
 });
 
 export type AnthropicConfig = z.infer<typeof anthropicConfigSchema>;

@@ -7,8 +7,12 @@ import { ZodValidationPipe } from '../../common/pipes';
 import {
   LeccionRequestSchema,
   ProfundizarRequestSchema,
+  ModuloAcademicoRequestSchema,
+  SpecUxRequestSchema,
   type LeccionRequest,
   type ProfundizarRequest,
+  type ModuloAcademicoRequest,
+  type SpecUxRequest,
 } from './schemas/generador.schemas';
 
 /**
@@ -41,5 +45,23 @@ export class GeneradorController {
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   async profundizar(@Body(new ZodValidationPipe(ProfundizarRequestSchema)) body: ProfundizarRequest) {
     return this.service.profundizar(body);
+  }
+
+  @Post('modulo-academico')
+  @Public()
+  @RawResponse()
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
+  async moduloAcademico(@Body(new ZodValidationPipe(ModuloAcademicoRequestSchema)) body: ModuloAcademicoRequest) {
+    return this.service.generarModuloAcademico(body);
+  }
+
+  @Post('spec-ux')
+  @Public()
+  @RawResponse()
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
+  async specUx(@Body(new ZodValidationPipe(SpecUxRequestSchema)) body: SpecUxRequest) {
+    return this.service.generarSpecUx(body);
   }
 }

@@ -4,7 +4,7 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": [],
+    "assets": [{ "include": "modules/generador/llm/skills/**/*.md", "watchAssets": true }],
     "watchAssets": false
   }
 }

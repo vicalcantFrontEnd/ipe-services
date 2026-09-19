@@ -30,7 +30,8 @@
       "PowerShell(npm install *)",
       "PowerShell(npm run *)",
       "PowerShell(npx eslint \"src/common/interceptors/timeout.interceptor.ts\" 2>&1 | Select-Object -Last 10; Write-Output \"LINT EXIT: $LASTEXITCODE\")",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "PowerShell(npx eslint --fix \"src/modules/generador/anthropic.service.ts\" 2>&1 | Select-Object -Last 6; Write-Output \"LINT EXIT: $LASTEXITCODE\")"
     ]
   }
 }
