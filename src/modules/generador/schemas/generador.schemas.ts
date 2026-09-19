@@ -28,8 +28,11 @@ export const DesarrolloSeccionSchema = z.object({
   txt: z.string(),
 });
 
+// `q` se valida como string libre (el tipo del frontend es `q: string`). El
+// modelo debe usar "Terapeuta"/"Consultante" (lo pide el tool y el prompt), pero
+// no rechazamos la generación si varía la etiqueta: el frontend lo tolera.
 export const GuionTurnoSchema = z.object({
-  q: z.enum(['Terapeuta', 'Consultante']),
+  q: z.string(),
   t: z.string(),
 });
 
@@ -80,21 +83,32 @@ export const ProfundizarRequestSchema = z.object({
 export type ProfundizarRequest = z.infer<typeof ProfundizarRequestSchema>;
 
 // ── Salida del agente clínico (tool_use) ─────────────────────────────────────
+// Esquema PERMISIVO: refleja el tipo `Desarrollo` del frontend, donde todos los
+// campos son opcionales. El tool + el prompt piden todos los campos (apertura,
+// ≥3 secciones, guion, ejercicio, cierre), pero NO rechazamos la generación si
+// el modelo omite alguno o varía una etiqueta — el frontend lo tolera y así
+// evitamos el 502 "formato inesperado". Los campos de sección/cita también son
+// laxos para no fallar por un `txt` faltante.
+const DesarrolloSeccionOutSchema = z.object({
+  t: z.string().optional(),
+  txt: z.string().optional(),
+});
+
 export const DesarrolloSchema = z.object({
-  apertura: z.string(),
-  secciones: z.array(DesarrolloSeccionSchema).min(1),
-  guion: z.array(GuionTurnoSchema),
+  apertura: z.string().optional(),
+  secciones: z.array(DesarrolloSeccionOutSchema).optional(),
+  guion: z.array(GuionTurnoSchema).optional(),
   comentario: z.string().optional(),
-  ejercicio: z.string(),
-  cierre: z.string(),
+  ejercicio: z.string().optional(),
+  cierre: z.string().optional(),
   nota: z.string().optional(),
   citas: z.array(CitaSchema).optional(),
 });
 export type Desarrollo = z.infer<typeof DesarrolloSchema>;
 
 export const AmpliacionSchema = z.object({
-  t: z.string(),
-  txt: z.string(),
+  t: z.string().optional(),
+  txt: z.string().optional(),
   citas: z.array(CitaSchema).optional(),
 });
 export type Ampliacion = z.infer<typeof AmpliacionSchema>;
