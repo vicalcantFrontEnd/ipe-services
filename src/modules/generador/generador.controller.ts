@@ -20,7 +20,7 @@ import {
  *  - Públicos (el frontend no envía JWT); rate limit estricto por coste del LLM.
  */
 @ApiTags('generador')
-@RequestTimeout(180_000) // 3 min: una generación con búsqueda web puede tardar 20–60s+
+@RequestTimeout(300_000) // 5 min: una generación con búsqueda web puede tardar ~2-3 min
 @Controller({ path: 'generador', version: VERSION_NEUTRAL })
 export class GeneradorController {
   constructor(private readonly service: GeneradorService) {}
