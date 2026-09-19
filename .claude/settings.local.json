@@ -31,7 +31,12 @@
       "PowerShell(npm run *)",
       "PowerShell(npx eslint \"src/common/interceptors/timeout.interceptor.ts\" 2>&1 | Select-Object -Last 10; Write-Output \"LINT EXIT: $LASTEXITCODE\")",
       "Bash(git fetch *)",
-      "PowerShell(npx eslint --fix \"src/modules/generador/anthropic.service.ts\" 2>&1 | Select-Object -Last 6; Write-Output \"LINT EXIT: $LASTEXITCODE\")"
+      "PowerShell(npx eslint --fix \"src/modules/generador/anthropic.service.ts\" 2>&1 | Select-Object -Last 6; Write-Output \"LINT EXIT: $LASTEXITCODE\")",
+      "Bash(grep -nA 25 \"^model Diplomado \" prisma/schema.prisma)",
+      "Bash(sed -n '1,30p' prisma/migrations/20260223043403_init/migration.sql)",
+      "Bash(grep -nA 18 'CREATE TABLE \"invoices\"' prisma/migrations/20260223043403_init/migration.sql)",
+      "Bash(npm run *)",
+      "Bash(npx eslint *)"
     ]
   }
 }

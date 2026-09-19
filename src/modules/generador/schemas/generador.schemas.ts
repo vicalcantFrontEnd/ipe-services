@@ -187,3 +187,23 @@ export const SpecUxSchema = z.object({
   prompts: z.array(z.string()).min(1),
 });
 export type SpecUx = z.infer<typeof SpecUxSchema>;
+
+// ── Persistencia de borradores (autosave del taller) ─────────────────────────
+// `BorradorData` es OPACO para el backend: lo guardamos tal cual (JSONB). Su
+// forma (generado/amp/approved/chat/active) es responsabilidad del frontend;
+// aquí solo validamos que sea un objeto para no acoplarnos a su estructura.
+export const BorradorDataSchema = z.record(z.unknown());
+export type BorradorData = z.infer<typeof BorradorDataSchema>;
+
+// POST /borrador/guardar — { docId, data }
+export const BorradorGuardarRequestSchema = z.object({
+  docId: z.string().min(1, 'El docId es obligatorio.'),
+  data: BorradorDataSchema,
+});
+export type BorradorGuardarRequest = z.infer<typeof BorradorGuardarRequestSchema>;
+
+// POST /borrador/cargar — { docId } → BorradorData | null
+export const BorradorCargarRequestSchema = z.object({
+  docId: z.string().min(1, 'El docId es obligatorio.'),
+});
+export type BorradorCargarRequest = z.infer<typeof BorradorCargarRequestSchema>;

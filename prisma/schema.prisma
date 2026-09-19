@@ -383,3 +383,23 @@ model Invoice {
   @@index([dueDate, status])
   @@map("invoices")
 }
+
+// ============================================================
+// GENERADOR DE DIPLOMADOS — persistencia de borradores
+// ============================================================
+// Guarda el borrador (contenido generado + revisión + chat) del taller del
+// Generador de Diplomados. `data` es opaco para el backend (lo maneja el
+// frontend); se persiste como JSONB. Clave por `docId` (nombre del temario).
+// `userId` queda listo para cuando el generador exija autenticación — hoy las
+// rutas son públicas y el borrador es por documento.
+model GeneradorBorrador {
+  id     String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  docId  String  @unique @map("doc_id")
+  userId String? @map("user_id") @db.Uuid
+  data   Json
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("generador_borradores")
+}

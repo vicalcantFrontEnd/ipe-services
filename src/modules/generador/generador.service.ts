@@ -1,4 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../database/prisma/prisma.service';
 import { AnthropicService } from './anthropic.service';
 import { ENTREGAR_LECCION_TOOL, ENTREGAR_AMPLIACION_TOOL, ENTREGAR_MODULO_TOOL, ENTREGAR_UX_TOOL } from './llm/tools';
 import {
@@ -21,13 +23,19 @@ import {
   type Ampliacion,
   type ModuloAcademico,
   type SpecUx,
+  type BorradorData,
+  type BorradorGuardarRequest,
+  type BorradorCargarRequest,
 } from './schemas/generador.schemas';
 
 @Injectable()
 export class GeneradorService implements OnModuleInit {
   private readonly logger = new Logger(GeneradorService.name);
 
-  constructor(private readonly anthropic: AnthropicService) {}
+  constructor(
+    private readonly anthropic: AnthropicService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   /**
    * Precarga (y verifica) las skills de los 3 agentes al arrancar. Si algún .md
@@ -84,5 +92,30 @@ export class GeneradorService implements OnModuleInit {
       investigar: input.investigar === true, // por defecto sin web search
       schema: SpecUxSchema,
     });
+  }
+
+  // ── Persistencia de borradores (autosave del taller) ───────────────────────
+
+  /**
+   * Guarda (upsert idempotente por `docId`) el borrador del diplomado. El
+   * frontend hace autosave con debounce, así que basta sobrescribir `data`.
+   * Devuelve `{}` (el frontend solo comprueba el 200).
+   */
+  async guardarBorrador(input: BorradorGuardarRequest): Promise<Record<string, never>> {
+    const data = input.data as Prisma.InputJsonValue;
+    await this.prisma.generadorBorrador.upsert({
+      where: { docId: input.docId },
+      create: { docId: input.docId, data },
+      update: { data },
+    });
+    return {};
+  }
+
+  /** Carga el borrador por `docId`; `null` si aún no hay ninguno guardado. */
+  async cargarBorrador(input: BorradorCargarRequest): Promise<BorradorData | null> {
+    const row = await this.prisma.generadorBorrador.findUnique({
+      where: { docId: input.docId },
+    });
+    return (row?.data as BorradorData | undefined) ?? null;
   }
 }
